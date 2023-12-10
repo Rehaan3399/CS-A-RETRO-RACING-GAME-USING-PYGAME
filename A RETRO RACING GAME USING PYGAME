@@ -1,0 +1,96 @@
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Constants
+WIDTH, HEIGHT = 800, 600
+FPS = 60
+PLAYER_WIDTH, PLAYER_HEIGHT = 50, 80
+OBSTACLE_WIDTH, OBSTACLE_HEIGHT = 50, 50
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+
+# Create the game window
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Retro Race Game - Mohammad")
+
+# Clock to control the frame rate
+clock = pygame.time.Clock()
+
+# Load images
+player_image = pygame.Surface((PLAYER_WIDTH, PLAYER_HEIGHT))
+player_image.fill(WHITE)
+
+obstacle_image = pygame.Surface((OBSTACLE_WIDTH, OBSTACLE_HEIGHT))
+obstacle_image.fill(RED)
+
+# Initial player position
+player_x = WIDTH // 2 - PLAYER_WIDTH // 2
+player_y = HEIGHT - 2 * PLAYER_HEIGHT
+
+# Initialize obstacles
+obstacles = []
+
+def spawn_obstacle():
+    obstacle_x = random.randint(0, WIDTH - OBSTACLE_WIDTH)
+    obstacle_y = -OBSTACLE_HEIGHT
+    return {'x': obstacle_x, 'y': obstacle_y}
+
+obstacles.append(spawn_obstacle())
+
+# Set initial speed
+speed = 5
+
+# Game loop
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    keys = pygame.key.get_pressed()
+    player_x -= (keys[pygame.K_LEFT] - keys[pygame.K_RIGHT]) * speed
+
+    # Update obstacles
+    for obstacle in obstacles:
+        obstacle['y'] += speed
+
+    # Check for collision with any obstacle
+    for obstacle in obstacles:
+        if (
+            player_x < obstacle['x'] + OBSTACLE_WIDTH
+            and player_x + PLAYER_WIDTH > obstacle['x']
+            and player_y < obstacle['y'] + OBSTACLE_HEIGHT
+            and player_y + PLAYER_HEIGHT > obstacle['y']
+        ):
+            font = pygame.font.SysFont(None, 72)
+            text = font.render("Game Over Mohammad!", True, WHITE)
+            screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+            pygame.display.flip()
+            pygame.time.delay(2000)  # Pause for 2 seconds
+            pygame.quit()
+            sys.exit()
+
+    # Remove off-screen obstacles and spawn new ones
+    obstacles = [obstacle for obstacle in obstacles if obstacle['y'] < HEIGHT]
+    if random.randint(1, 10) == 1:
+        obstacles.append(spawn_obstacle())
+
+    # Draw background
+    screen.fill((0, 0, 0))
+
+    # Draw player
+    screen.blit(player_image, (player_x, player_y))
+
+    # Draw obstacles
+    for obstacle in obstacles:
+        screen.blit(obstacle_image, (obstacle['x'], obstacle['y']))
+
+    # Update display
+    pygame.display.flip()
+
+    # Cap the frame rate
+    clock.tick(FPS)
